@@ -34,6 +34,11 @@ public:
 };
 
 class SetState : virtual public State {
+friend SetState operator,(const SetState& a, const SetState& b) {
+std::set<int> ab = a.states;
+ab.insert(b.states.begin(), b.states.end());
+return SetState(ab);
+}
 private:
     std::set<int> const states;
 public:
