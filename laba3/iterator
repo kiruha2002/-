@@ -119,3 +119,35 @@ public:
     skipList(const skipList<T> &other) {
         copy(other);
     }
+void move(skipList<T> &&other) {
+        maxHeight = other.maxHeight;
+        chance = other.chance;
+        height = other.height;
+        other.height = 0;
+        amount = other.amount;
+        other.amount = 0;
+        head = other.head;
+        tail = other.tail;
+        other.tail = other.head = nullptr;
+        cmp = other.cmp;
+    }
+    skipList(skipList<T> &&other) noexcept {
+        move();
+    }
+    skipList &operator=(skipList<T> &&other) noexcept {
+        if (&other != this) {
+            delete[] head;
+            move();
+        }
+        return *this;
+    }
+
+    skipList<T> &operator=(const skipList<T> &other) {
+        if (this == &other) return *this;
+        delete head;
+        copy(other);
+        return *this;
+    }
+    ~skipList() {
+        delete head;
+    }
