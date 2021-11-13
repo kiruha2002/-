@@ -1,1 +1,35 @@
+#include <bits/stdc++.h>
+#include <functional>
 
+template<class T>
+struct node {
+    T value;
+    node **prev, **next;
+    explicit node(T value_, int8_t size) {
+        value = value_;
+        prev = new node *[size];
+        next = new node *[size];
+        for (int8_t i = 0; i < size; i++) {
+            prev[i] = next[i] = nullptr;
+        }
+    }
+    ~node() {
+        delete getNext();
+        delete[] prev;
+        delete[] next;
+    }
+    node *getNext(int8_t lvl = 0) const {
+        return next[lvl];
+    }
+    node *getPrev(uint8_t lvl = 0) const {
+        return prev[lvl];
+    }
+    static void connect(node *A, node *B, uint8_t level) {
+        if (A) A->next[level] = B;
+        if (B) B->prev[level] = A;
+    }
+    static void connect(node *A, node *B, node *C, uint8_t level) {
+        connect(A, B, level);
+        connect(B, C, level);
+    }
+};
