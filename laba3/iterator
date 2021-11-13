@@ -33,3 +33,52 @@ struct node {
         connect(B, C, level);
     }
 };
+template<class T>
+class skipList;
+
+template<class T>
+class skipListIterator : public std::iterator<std::bidirectional_iterator_tag, skipList<T>> {
+    node<T> *current;
+public:
+    explicit skipListIterator(node<T> *N) {
+        current = N;
+    }
+    node<T> *operator~() {
+        return current;
+    }
+    T &operator*() {
+        return current->value;
+    }
+    const T &operator*() const {
+        return current->value;
+    }
+    skipListIterator<T> &operator++() {
+        current = current->getNext();
+        return *this;
+    }
+    skipListIterator<T> &operator--() {
+        current = current->getPrev();
+        return *this;
+    }
+    bool operator==(const skipListIterator<T> &other) const {
+        return current == other.current;
+    }
+    bool operator!=(const skipListIterator<T> &other) const {
+        return current != other.current;
+    }
+};
+template<typename T>
+class skipList {
+    std::function<int(T, T)> cmp;
+    uint64_t amount = 0;
+    int8_t maxHeight{}, height{};
+    float chance{};
+    node<T> *head, *tail;
+public:
+    explicit skipList(int8_t maxHeight_ = 4, float chance_ = .5, std::function<int(T, T)> cmp_ = [](T a, T b) { return a - b; }) {
+        cmp = cmp_;
+        maxHeight = maxHeight_;
+        chance = chance_;
+        height = 1;
+        tail = head = new node<T>(-1, maxHeight);
+    }
