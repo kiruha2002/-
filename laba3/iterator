@@ -82,3 +82,40 @@ public:
         height = 1;
         tail = head = new node<T>(-1, maxHeight);
     }
+//skipList(int8_t maxHeight_, float chance, std::iter)
+    void copy(const skipList<T> &other) {
+        cmp = other.cmp;
+        maxHeight = other.maxHeight;
+        chance = other.chance;
+        height = other.height;
+        amount = other.amount;
+        tail = other.tail;
+        head = new node<T>(-1, maxHeight);
+        auto **lastOnLevels = new node<T> *[maxHeight];
+        auto **lastOnLevelsOther = new node<T> *[maxHeight];
+        for (int i = 0; i < maxHeight; i++) {
+            lastOnLevels[i] = head;
+            lastOnLevelsOther[i] = other.head;
+        }
+        node<T> *temp = head;
+        node<T> *tempOther = other.head;
+        while (tempOther) {
+            for (int i = 0; i < maxHeight; i++) {
+                if (lastOnLevelsOther[i]->next[i] == tempOther) {
+                    node<T>::connect(lastOnLevels[i], temp, i);
+                    lastOnLevelsOther[i] = tempOther;
+                    lastOnLevels[i] = temp;
+                }
+            }
+            tempOther = tempOther->next[0];
+            if (tempOther) {
+                temp->next[0] = new node<T>(tempOther->value, maxHeight);
+            }
+            temp = temp->next[0];
+        }
+        delete[] lastOnLevels;
+        delete[] lastOnLevelsOther;
+    }
+    skipList(const skipList<T> &other) {
+        copy(other);
+    }
