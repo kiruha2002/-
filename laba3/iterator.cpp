@@ -151,3 +151,214 @@ void move(skipList<T> &&other) {
     ~skipList() {
         delete head;
     }
+ uint64_t size() const {
+        return amount;
+    }
+    bool empty() const {
+        return !(head->getNext());
+    }
+    bool coin() const {
+        return (((float) rand()) / RAND_MAX) < chance;
+    }
+    void insert(T value) {
+        //printf("(%d)", value);
+        node<T> **lastOnLvls = new node<T> *[maxHeight];
+        for (int8_t i = 0; i < maxHeight; i++) {
+            lastOnLvls[i] = head;
+        }
+        node<T> *P = head, *P_;
+        for (int8_t L = height - 1; L >= 0; L--) {
+            P_ = P->getNext(L);
+            //                               cmp
+            while (P_ != nullptr && cmp(P_->value, value) < 0) {
+                //printf("->%d", P_->value);
+                P = P_;
+                P_ = P->getNext(L);
+            }
+            lastOnLvls[L] = P;
+            //printf(" V ");
+        }
+        //printf("\n");
+        node<T> *newNode = new node<T>(value, maxHeight);
+        node<T>::connect(lastOnLvls[0], newNode, lastOnLvls[0]->getNext(0), 0);
+        for (int8_t i = 1; (i < maxHeight) && coin(); i++) {
+            node<T>::connect(lastOnLvls[i], newNode, lastOnLvls[i]->getNext(i), i);
+            if (i + 1 > height)height = i + 1;
+        }
+        amount++;
+        if (lastOnLvls[0] == tail)tail = P;
+        delete[] lastOnLvls;
+        //print();
+    }
+    void print() {
+        for (int8_t l = maxHeight - 1; l >= 0; l--) {
+            printf("%d: ", l);
+            node<T> *P = head->getNext(l);
+            while (P) {
+                std::cout << P->value << ' ';
+                P = P->getNext(l);
+            }
+            printf("\n");
+        }
+        printf("\n");
+    }
+    void clear() {
+        delete head;
+        tail = head = new node<T>(-1, maxHeight);
+        height = 1;
+        amount = 0;
+    }
+
+    skipListIterator<T> begin() {
+        return skipListIterator<T>(head->getNext());
+    }
+    skipListIterator<T> end() {
+        return skipListIterator<T>(nullptr);
+    }
+    skipListIterator<T> find(T value) {
+        node<T> *P = head, *P_;
+        for (int8_t L = height - 1; L >= 0; L--) {
+            P_ = P->getNext(L);
+            while (P_ != nullptr) {
+                if (cmp(P_->value, value) < 0) {
+                    P = P_;
+                    P_ = P->getNext(L);
+                } else if (cmp(P_->value, value) == 0) {
+                    return skipListIterator<T>(P_);
+                } else {
+                    break;
+                }
+            }
+        }
+        return end();
+    }
+    skipListIterator<T> lower_bound(T value) {
+        node<T> *P = head, *P_;
+        for (int8_t L = height - 1; L >= 0; L--) {
+            P_ = P->getNext(L);
+            while (P_ != nullptr) {
+                if (cmp(P_->value, value) < 0) {
+                    P = P_;
+                    P_ = P->getNext(L);
+                } else {
+                    break;
+                }
+            }
+        }
+        return skipListIterator<T>(P_);
+    }
+    skipListIterator<T> upper_bound(T value) {
+        node<T> *P = head, *P_;
+        for (int8_t L = height - 1; L >= 0; L--) {
+            P_ = P->getNext(L);
+            while (P_ != nullptr) {
+                if (cmp(P_->value, value) <= 0) {
+                    P = P_;
+                    P_ = P->getNext(L);
+                } else {
+                    break;
+                }
+            }
+        }
+        return skipListIterator<T>(P_);
+    }
+    void erase(skipListIterator<T> N_) {
+        node<T> *N = ~N_;
+        for (int8_t i = 0; i < maxHeight; i++) {
+            node<T>::connect(N->getPrev(i), N->getNext(i), i);
+            N->next[i] = nullptr;
+        }
+        delete N;
+    }
+    void erase(skipListIterator<T> from, skipListIterator<T> to) {
+        skipListIterator<T> to_ = to;
+        ++to_;
+        while (from != to_) {
+            skipListIterator<T> temp = from;
+            ++temp;
+            erase(from);
+            from = temp;
+        }
+    }
+    void erase(std::pair<skipListIterator<T>, skipListIterator<T>> zone) {
+        erase(zone.first, zone.second);
+    }
+    uint64_t count(T value) {
+        skipListIterator<T> Nl = find(value);
+        if (Nl == end())return 0;
+        uint64_t C = 1;
+        skipListIterator<T> Nr = Nl, Nt = Nr;
+        while (*++Nt == *Nr) {
+            Nr = Nt;
+            C++;
+        }
+        Nt = Nl;
+        while (*--Nt == *Nl) {
+            Nl = Nt;
+            C++;
+        }
+        return C;
+    }
+    std::pair<skipListIterator<T>, skipListIterator<T>> equal_range(T value) {
+        skipListIterator<T> Nl = find(value);
+        if (Nl == end()) std::make_pair(Nl, Nl);
+        skipListIterator<T> Nr = Nl, Nt = Nr;
+        while (*++Nt == *Nr) {
+            Nr = Nt;
+        }
+        Nt = Nl;
+        while (*--Nt == *Nl) {
+            Nl = Nt;
+        }
+        return std::make_pair(Nl, Nr);
+    }
+};
+
+
+int main() {
+    skipList<int> list(4, 0.25, [](int a, int b) { return a - b; });
+    {
+        list.insert(7);
+        list.insert(8);
+        list.insert(2);
+        list.insert(3);
+        list.insert(5);
+        list.insert(6);
+        list.insert(11);
+        list.insert(4);
+        list.insert(9);
+        list.insert(21);
+        list.insert(22);
+        list.insert(23);
+        list.insert(8);
+        list.insert(16);
+        list.insert(16);
+        list.insert(1);
+        list.insert(13);
+        list.insert(12);
+        list.insert(13);
+        list.insert(14);
+        list.insert(15);
+        list.insert(16);
+        list.insert(17);
+        list.insert(11);
+        list.insert(19);
+        list.insert(20);
+    }
+    list.print();
+    printf(">%lu\n", list.count(16));
+    list.erase(list.equal_range(11));
+    list.print();
+    list.erase(list.equal_range(16));
+    list.print();
+
+    printf("from 11: ");
+    for (auto x = list.upper_bound(11); x != list.end(); ++x) {
+        std::cout << *x << " ";
+    }
+    printf("\n(for :) ");
+    for (auto x: list) {
+        std::cout << x << " ";
+    }
+    return 0;
+}
